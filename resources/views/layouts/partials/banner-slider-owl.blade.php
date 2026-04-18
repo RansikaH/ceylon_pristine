@@ -73,14 +73,6 @@
         @foreach($sliders as $slider)
             <div class="item">
                 <div class="position-relative" style="background: white; min-height: 500px;">
-                    <!-- Logo in top right -->
-                    <div class="position-absolute top-0 end-0 p-4">
-                        <div class="d-flex align-items-center">
-                            <div style="width: 40px; height: 40px; background: #c52b36; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                                <div style="width: 30px; height: 30px; background: #50946c; border-radius: 50%;"></div>
-                            </div>
-                        </div>
-                    </div>
 
                     <div class="container h-100">
                         <div class="row align-items-center h-100">
@@ -106,14 +98,6 @@
         {{-- Fallback to default sliders if no sliders exist --}}
         <div class="item">
             <div class="position-relative" style="background: white; min-height: 500px;">
-                <!-- Logo in top right -->
-                <div class="position-absolute top-0 end-0 p-4">
-                    <div class="d-flex align-items-center">
-                        <div style="width: 40px; height: 40px; background: #c52b36; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                            <div style="width: 30px; height: 30px; background: #50946c; border-radius: 50%;"></div>
-                        </div>
-                    </div>
-                </div>
 
                 <div class="container h-100">
                     <div class="row align-items-center h-100">
