@@ -1,0 +1,28 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Redirect to the public folder
+    RewriteRule ^$ public/ [L]
+    RewriteRule (.*) public/$1 [L]
+
+    # Deny access to environment files
+    <Files .env>
+        Order allow,deny
+        Deny from all
+    </Files>
+
+    # Deny access to sensitive files
+    <FilesMatch "\.(env|json|config|log|key|phpunit|sql|sqlite|yaml)$">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+
+    # Block access to Git and version control files
+    <FilesMatch "\.(git|svn|hg|bzr|cvs|bak|swp)$">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+</IfModule>
+
+# Prevent directory listing
+Options -Indexes

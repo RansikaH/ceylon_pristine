@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom typography for professional appearance */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-weight: 400;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+/* Custom brand colors to override Bootstrap and provide Tailwind/utility compatibility */
+:root {
+  --brand-primary: #50946c;
+  --brand-secondary: #c52b36;
+}
+
+/* Override Bootstrap button and alert colors */
+.btn-primary, .bg-primary, .text-primary, .border-primary {
+  background-color: var(--brand-primary) !important;
+  color: #fff !important;
+  border-color: var(--brand-primary) !important;
+}
+.btn-primary:hover, .bg-primary:hover, .text-primary:hover, .border-primary:hover {
+  background-color: var(--brand-secondary) !important;
+  color: #fff !important;
+  border-color: var(--brand-secondary) !important;
+}
+.btn-success, .bg-success, .text-success, .border-success {
+  background-color: var(--brand-primary) !important;
+  color: #fff !important;
+  border-color: var(--brand-primary) !important;
+}
+.btn-danger, .bg-danger, .text-danger, .border-danger {
+  background-color: var(--brand-secondary) !important;
+  color: #fff !important;
+  border-color: var(--brand-secondary) !important;
+}
+
+/* Utility classes for direct use */
+.bg-brand-primary { background-color: var(--brand-primary) !important; }
+.bg-brand-secondary { background-color: var(--brand-secondary) !important; }
+.text-brand-primary { color: var(--brand-primary) !important; }
+.text-brand-secondary { color: var(--brand-secondary) !important; }
+
+/* Ensure Bootstrap alerts match brand */
+.alert-success { background-color: var(--brand-primary) !important; color: #fff !important; }
+.alert-danger { background-color: var(--brand-secondary) !important; color: #fff !important; }
+
+/* Remove unwanted highlights */
+mark {
+    background: none !important;
+    color: inherit !important;
+}
+
+::selection {
+    background: var(--brand-primary) !important;
+    color: white !important;
+}
+
+::-moz-selection {
+    background: var(--brand-primary) !important;
+    color: white !important;
+}
+
+/* Remove any browser default text highlights */
+.no-highlight {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
