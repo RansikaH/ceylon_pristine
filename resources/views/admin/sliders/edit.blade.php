@@ -25,10 +25,10 @@
                     <h5 class="card-title mb-0">Edit Slider Details</h5>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('admin.sliders.update', $slider) }}" method="POST" enctype="multipart/form-data">
+                    <form action="{{ route('admin.sliders.update', $slider) }}" method="POST" enctype="multipart/form-data" id="updateSliderForm">
                         @csrf
                         @method('PUT')
-                        
+
                         <div class="row">
                             <div class="col-md-8">
                                 <div class="mb-3">
@@ -144,15 +144,8 @@
                                         <a href="{{ route('admin.sliders.index') }}" class="btn btn-outline-secondary">
                                             <i class="bi bi-x-circle me-2"></i>Cancel
                                         </a>
-                                        <form action="{{ route('admin.sliders.destroy', $slider) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this slider?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-outline-danger ms-2">
-                                                <i class="bi bi-trash me-2"></i>Delete
-                                            </button>
-                                        </form>
                                     </div>
-                                    <button type="submit" class="btn btn-success">
+                                    <button type="submit" form="updateSliderForm" class="btn btn-success">
                                         <i class="bi bi-check-circle me-2"></i>Update Slider
                                     </button>
                                 </div>
@@ -164,6 +157,21 @@
         </div>
     </div>
 </div>
+
+<!-- Delete form moved outside the main form -->
+<div class="container-fluid mt-3">
+    <div class="row">
+        <div class="col-12">
+            <form action="{{ route('admin.sliders.destroy', $slider) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this slider?')">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-outline-danger">
+                    <i class="bi bi-trash me-2"></i>Delete Slider
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -172,7 +180,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Image preview
     const imageInput = document.getElementById('image');
     const imagePreview = document.getElementById('image_preview');
-    
+
     imageInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
@@ -186,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function() {
             reader.readAsDataURL(file);
         }
     });
-    
+
     // Rich text editor functionality
     const description = document.getElementById('description');
     description.style.minHeight = '150px';
