@@ -18,7 +18,11 @@ class ProductController extends Controller
             ->take(4)->get();
         $totalProducts = \App\Models\Product::when($categoryId, fn($q) => $q->where('category_id', $categoryId))->count();
         $showViewMore = $totalProducts > 4;
-        return view('shop.index', compact('products', 'categories', 'categoryId', 'showViewMore'));
+
+        // Get active sliders for homepage
+        $sliders = \App\Models\Slider::active()->ordered()->get();
+
+        return view('shop.index', compact('products', 'categories', 'categoryId', 'showViewMore', 'sliders'));
     }
 
     // Customer-facing: product detail
