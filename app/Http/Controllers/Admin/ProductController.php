@@ -56,6 +56,8 @@ class ProductController extends Controller
             'stock' => 'required|integer|min:0',
             'main_image' => 'required|image|max:2048',
             'additional_images.*' => 'nullable|image|max:2048',
+            'free_delivery_quantity' => 'nullable|integer|min:1',
+            'delivery_fee' => 'nullable|numeric|min:0',
             'is_featured' => 'boolean',
             'is_active' => 'boolean',
         ], [
@@ -64,6 +66,8 @@ class ProductController extends Controller
             'main_image.max' => 'The main image may not be greater than 2MB.',
             'additional_images.*.image' => 'Additional images must be valid image files (jpeg, jpg, png, gif, webp).',
             'additional_images.*.max' => 'Additional images may not be greater than 2MB each.',
+            'free_delivery_quantity.min' => 'Free delivery quantity must be at least 1.',
+            'delivery_fee.min' => 'Delivery fee cannot be negative.',
         ]);
 
         $validated['slug'] = Str::slug($validated['name']);
@@ -165,6 +169,8 @@ class ProductController extends Controller
             'stock' => 'required|integer|min:0',
             'main_image' => 'nullable|image|max:2048',
             'additional_images.*' => 'nullable|image|max:2048',
+            'free_delivery_quantity' => 'nullable|integer|min:1',
+            'delivery_fee' => 'nullable|numeric|min:0',
             'is_featured' => 'boolean',
             'is_active' => 'boolean',
         ], [
@@ -172,6 +178,8 @@ class ProductController extends Controller
             'main_image.max' => 'The main image may not be greater than 2MB.',
             'additional_images.*.image' => 'Additional images must be valid image files (jpeg, jpg, png, gif, webp).',
             'additional_images.*.max' => 'Additional images may not be greater than 2MB each.',
+            'free_delivery_quantity.min' => 'Free delivery quantity must be at least 1.',
+            'delivery_fee.min' => 'Delivery fee cannot be negative.',
         ]);
 
         $validated['slug'] = Str::slug($validated['name']);

@@ -100,6 +100,23 @@
                     @endif
                 </div>
 
+                <!-- Delivery Information -->
+                @if($product->delivery_info && ($product->delivery_info['has_free_delivery'] || $product->delivery_info['delivery_fee'] > 0))
+                    <div class="delivery-info-card mb-2">
+                        @if($product->delivery_info['has_free_delivery'])
+                            <div class="small text-success">
+                                <i class="bi bi-truck me-1"></i>
+                                Free delivery from {{ $product->delivery_info['free_delivery_quantity'] }} units
+                            </div>
+                        @else
+                            <div class="small text-warning">
+                                <i class="bi bi-truck me-1"></i>
+                                Delivery: LKR {{ number_format($product->delivery_info['delivery_fee'], 2) }}
+                            </div>
+                        @endif
+                    </div>
+                @endif
+
                 <!-- Add to Cart Button -->
                 <form action="{{ route('cart.add', $product) }}" method="POST" class="d-inline">
                     @csrf
@@ -325,3 +342,19 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endpush
+
+<style>
+.delivery-info-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #e9ecef;
+    font-size: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.delivery-info-card:hover {
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+    border-color: #667eea;
+}
+</style>

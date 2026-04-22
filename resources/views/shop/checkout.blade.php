@@ -22,7 +22,7 @@
                         <i class="bi bi-credit-card me-2" style="font-size: 1.5rem; color: #50946c;"></i>
                         <h2 class="h4 fw-bold mb-0" style="color: #50946c;">{{ __('Checkout') }}</h2>
                     </div>
-                    
+
                     <div class="card-body p-4">
                         <div class="card mb-4 border-0 bg-light">
                             <div class="card-header bg-light border-0 pb-0">
@@ -30,26 +30,22 @@
                             </div>
                             <div class="card-body">
                                 <ul class="list-group list-group-flush mb-3">
-                                    @php $total = 0; $totalSavings = 0; @endphp
+                                    @php $total = 0; $totalSavings = 0; $totalDelivery = 0; @endphp
                                     @foreach($cart as $item)
-                                        @php 
+                                        @php
                                             $itemPrice = $item['discounted_price'] ?? $item['price'];
-                                            $subtotal = $itemPrice * $item['quantity']; 
+                                            $subtotal = $itemPrice * $item['quantity'];
+                                            $deliveryFee = $item['delivery_fee'] ?? 0;
                                             $total += $subtotal;
+                                            $totalDelivery += $deliveryFee;
                                             if (isset($item['discount_percentage']) && $item['discount_percentage'] > 0) {
                                                 $itemSavings = ($item['price'] - $itemPrice) * $item['quantity'];
                                                 $totalSavings += $itemSavings;
                                             }
-                                            $imgPath = $item['image'] ? 'storage/' . $item['image'] : null;
-                                            $defaultImage = asset('product-images/default_product.png');
-                                            $imageSrc = $defaultImage;
-                                            if ($imgPath && file_exists(public_path($imgPath))) {
-                                                $imageSrc = asset($imgPath);
-                                            }
                                         @endphp
                                         <li class="list-group-item bg-light border-0 border-bottom px-0 py-3">
                                             <div class="d-flex align-items-center">
-                                                <img src="{{ $imageSrc }}" width="50" height="50" class="me-3 rounded-3 border shadow-sm checkout-img-hover" alt="{{ $item['name'] }}" style="object-fit:cover;">
+                                                <img src="{{ $item['image'] }}" width="50" height="50" class="me-3 rounded-3 border shadow-sm checkout-img-hover" alt="{{ $item['name'] }}" style="object-fit:cover;" onerror="this.onerror=null; this.src='{{ asset('product-images/default_product.png') }}'">
                                                 <div class="flex-grow-1">
                                                     <div class="fw-medium">
                                                         {{ $item['name'] }}
@@ -66,26 +62,51 @@
                                                             {{ __('Qty') }}: {{ $item['quantity'] }} × LKR {{ number_format($item['price'], 2) }}
                                                         @endif
                                                     </div>
+                                                    @if(isset($item['delivery_info']) && ($item['delivery_info']['has_free_delivery'] || $item['delivery_info']['delivery_fee'] > 0))
+                                                        <div class="small text-muted mt-1">
+                                                            @if($item['delivery_info']['has_free_delivery'])
+                                                                <i class="bi bi-truck text-success"></i>
+                                                                @if($item['quantity'] >= $item['delivery_info']['free_delivery_quantity'])
+                                                                    <span class="text-success">Free delivery</span>
+                                                                @else
+                                                                    <span>Free delivery from {{ $item['delivery_info']['free_delivery_quantity'] }} units</span>
+                                                                @endif
+                                                            @else
+                                                                <i class="bi bi-truck text-warning"></i>
+                                                                <span>Delivery: LKR {{ number_format($item['delivery_fee'], 2) }}</span>
+                                                            @endif
+                                                        </div>
+                                                    @endif
                                                 </div>
                                                 <div class="fw-medium text-end" style="min-width:80px;">LKR {{ number_format($subtotal,2) }}</div>
                                             </div>
                                         </li>
                                     @endforeach
                                 </ul>
-                                
+
                                 @if($totalSavings > 0)
                                     <div class="d-flex justify-content-between align-items-center text-success mb-2">
                                         <span class="small">{{ __('Total Savings') }}:</span>
                                         <span class="fw-semibold">LKR {{ number_format($totalSavings, 2) }}</span>
                                     </div>
                                 @endif
+                                @if($totalDelivery > 0)
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="small">{{ __('Delivery Fees') }}:</span>
+                                        <span class="fw-semibold">LKR {{ number_format($totalDelivery, 2) }}</span>
+                                    </div>
+                                @endif
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="h6 mb-0">{{ __('Subtotal') }}:</span>
+                                    <span class="h6 mb-0 fw-medium">LKR {{ number_format($total,2) }}</span>
+                                </div>
                                 <div class="d-flex justify-content-between align-items-center fw-bold border-top pt-3">
                                     <span class="h5 mb-0">{{ __('Total') }}:</span>
-                                    <span class="h4 mb-0" style="color:#50946c;">LKR {{ number_format($total,2) }}</span>
+                                    <span class="h4 mb-0" style="color:#50946c;">LKR {{ number_format($total + $totalDelivery,2) }}</span>
                                 </div>
                             </div>
                         </div>
-                        
+
                         @guest
                             <div class="alert alert-warning border-0 d-flex align-items-center" role="alert">
                                 <i class="bi bi-exclamation-triangle-fill me-2"></i>
@@ -93,7 +114,7 @@
                                     {{ __('You need to have an account as a customer to move forward with the order placement.') }}
                                 </div>
                             </div>
-                            
+
                             <div class="d-flex justify-content-center gap-3 mt-4">
                                 <a href="{{ route('login') }}" class="btn btn-primary rounded-pill px-4 py-2 fw-semibold">
                                     <i class="bi bi-box-arrow-in-right me-2"></i>{{ __('Login') }}
@@ -132,7 +153,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        
+
                                         <div class="mb-4">
                                             <div class="form-check">
                                                 <input class="form-check-input" type="radio" name="address_option" id="use_new_address" value="new">
@@ -142,7 +163,7 @@
                                             </div>
                                         </div>
                                     @endif
-                                    
+
                                     <form action="{{ route('checkout.process') }}" method="POST" class="mb-0" id="checkout_form">
                                         @csrf
                                         <div id="new_address_fields" @if(auth()->user()->hasCompleteAddress()) style="display: none;" @endif>
@@ -154,7 +175,7 @@
                                                         <input type="text" name="customer_name" id="customer_name" class="form-control" value="{{ old('customer_name', auth()->user()->name ?? '') }}">
                                                     </div>
                                                 </div>
-                                                
+
                                                 <div class="col-md-6 mb-3">
                                                     <label for="customer_phone" class="form-label">{{ __('Phone Number') }}</label>
                                                     <div class="input-group">
@@ -163,7 +184,7 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            
+
                                             <div class="mb-3">
                                                 <label for="customer_email" class="form-label">{{ __('Email Address') }}</label>
                                                 <div class="input-group">
@@ -171,7 +192,7 @@
                                                     <input type="email" name="customer_email" id="customer_email" class="form-control" value="{{ old('customer_email', auth()->user()->email ?? '') }}">
                                                 </div>
                                             </div>
-                                            
+
                                             <div class="mb-3">
                                                 <label for="address_line_1" class="form-label">{{ __('Address Line 1') }} *</label>
                                                 <div class="input-group">
@@ -179,7 +200,7 @@
                                                     <input type="text" name="address_line_1" id="address_line_1" class="form-control" value="{{ old('address_line_1') }}">
                                                 </div>
                                             </div>
-                                            
+
                                             <div class="mb-3">
                                                 <label for="address_line_2" class="form-label">{{ __('Address Line 2') }}</label>
                                                 <div class="input-group">
@@ -187,7 +208,7 @@
                                                     <input type="text" name="address_line_2" id="address_line_2" class="form-control" value="{{ old('address_line_2') }}">
                                                 </div>
                                             </div>
-                                            
+
                                             <div class="row">
                                                 <div class="col-md-6 mb-3">
                                                     <label for="district" class="form-label">{{ __('District') }} *</label>
@@ -201,7 +222,7 @@
                                                         </select>
                                                     </div>
                                                 </div>
-                                                
+
                                                 <div class="col-md-6 mb-3">
                                                     <label for="city" class="form-label">{{ __('City') }} *</label>
                                                     <div class="input-group">
@@ -217,7 +238,7 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            
+
                                             <div class="mb-3">
                                                 <label for="postal_code" class="form-label">{{ __('Postal Code') }}</label>
                                                 <div class="input-group">
@@ -225,7 +246,7 @@
                                                     <input type="text" name="postal_code" id="postal_code" class="form-control" value="{{ old('postal_code') }}" pattern="[0-9]{5}" maxlength="5">
                                                 </div>
                                             </div>
-                                            
+
                                             <div class="form-check mb-3">
                                                 <input class="form-check-input" type="checkbox" name="save_address" id="save_address" value="1">
                                                 <label class="form-check-label" for="save_address">
@@ -233,7 +254,7 @@
                                                 </label>
                                             </div>
                                         </div>
-                                        
+
                                         <div class="card border-0 bg-light mb-4">
                                             <div class="card-body">
                                                 <h6 class="card-title mb-3">
@@ -242,13 +263,13 @@
                                                 <div class="mb-3">
                                                     @foreach([
                                                         'cod' => 'Cash on Delivery',
-                                                        'card' => 'Credit/Debit Card', 
+                                                        'card' => 'Credit/Debit Card',
                                                         'bank' => 'Bank Transfer',
                                                         'mobile' => 'Mobile Payment'
                                                     ] as $value => $label)
                                                         <div class="form-check mb-2">
-                                                            <input class="form-check-input" type="radio" name="payment_method" 
-                                                                   id="payment_{{ $value }}" value="{{ $value }}" 
+                                                            <input class="form-check-input" type="radio" name="payment_method"
+                                                                   id="payment_{{ $value }}" value="{{ $value }}"
                                                                    @if($loop->first) checked @endif
                                                                    required>
                                                             <label class="form-check-label" for="payment_{{ $value }}">
@@ -262,7 +283,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        
+
                                         <button type="submit" class="btn btn-success btn-lg w-100 rounded-pill fw-semibold">
                                             <i class="bi bi-bag-check me-2"></i>{{ __('Place Order') }}
                                         </button>
@@ -281,27 +302,27 @@
     .checkout-img-hover {
         transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
-    
+
     .checkout-img-hover:hover {
         transform: scale(1.05);
         box-shadow: 0 8px 32px 0 rgba(80,148,108,0.15);
     }
-    
+
     .btn-success {
         background-color: #50946c;
         border-color: #50946c;
     }
-    
+
     .btn-success:hover {
         background-color: #3d7254;
         border-color: #3d7254;
     }
-    
+
     .btn-outline-success {
         color: #50946c;
         border-color: #50946c;
     }
-    
+
     .btn-outline-success:hover {
         background-color: #50946c;
         border-color: #50946c;
@@ -314,21 +335,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const useNewAddress = document.getElementById('use_new_address');
     const newAddressFields = document.getElementById('new_address_fields');
     const checkoutForm = document.getElementById('checkout_form');
-    
+
     if (useSavedAddress && useNewAddress) {
         useSavedAddress.addEventListener('change', function() {
             if (this.checked) {
                 newAddressFields.style.display = 'none';
             }
         });
-        
+
         useNewAddress.addEventListener('change', function() {
             if (this.checked) {
                 newAddressFields.style.display = 'block';
             }
         });
     }
-    
+
     // Handle form submission
     checkoutForm.addEventListener('submit', function(e) {
         if (useSavedAddress && useSavedAddress.checked) {

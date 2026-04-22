@@ -307,6 +307,65 @@
                         </div>
                     </div>
 
+                    <!-- Delivery Settings Card -->
+                    <div class="card shadow modern-card mb-4">
+                        <div class="card-header modern-card-header">
+                            <h6 class="modern-card-title">
+                                <i class="bi bi-truck me-2"></i>Delivery Settings
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="free_delivery_quantity" class="form-label-modern">
+                                        Free Delivery Quantity <small class="text-muted">(Optional)</small>
+                                    </label>
+                                    <div class="delivery-input-wrapper">
+                                        <i class="bi bi-truck input-icon"></i>
+                                        <input type="number"
+                                               name="free_delivery_quantity"
+                                               class="form-control-modern @error('free_delivery_quantity') is-invalid @enderror"
+                                               placeholder="e.g., 5"
+                                               min="1"
+                                               value="{{ old('free_delivery_quantity') }}">
+                                        <div class="input-hint">
+                                            <small class="text-muted">Minimum quantity for free delivery</small>
+                                        </div>
+                                    </div>
+                                    @error('free_delivery_quantity')
+                                        <div class="error-feedback">
+                                            <i class="bi bi-exclamation-triangle me-1"></i>{{ $message }}
+                                        </div>
+                                    @enderror
+                                </div>
+
+                                <div>
+                                    <label for="delivery_fee" class="form-label-modern">
+                                        Delivery Fee (LKR) <small class="text-muted">(Optional)</small>
+                                    </label>
+                                    <div class="price-input-wrapper">
+                                        <span class="currency-symbol">LKR</span>
+                                        <input type="number"
+                                               name="delivery_fee"
+                                               class="form-control-modern @error('delivery_fee') is-invalid @enderror"
+                                               placeholder="0.00"
+                                               step="0.01"
+                                               min="0"
+                                               value="{{ old('delivery_fee') }}">
+                                    </div>
+                                    <div class="input-hint">
+                                        <small class="text-muted">Applied when quantity is below free delivery threshold</small>
+                                    </div>
+                                    @error('delivery_fee')
+                                        <div class="error-feedback">
+                                            <i class="bi bi-exclamation-triangle me-1"></i>{{ $message }}
+                                        </div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Quick Stats Card -->
                     <div class="card shadow-sm stats-card mb-4">
                         <div class="card-body">
@@ -966,6 +1025,21 @@
             margin-top: 1.5rem;
             padding-top: 1.5rem;
             border-top: 1px solid #e9ecef;
+        }
+
+        /* Delivery Settings Styles */
+        .delivery-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .delivery-input-wrapper input {
+            padding-left: 45px;
+        }
+
+        .input-hint {
+            margin-top: 0.5rem;
         }
 
         .alert-option {
