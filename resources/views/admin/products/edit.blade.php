@@ -166,7 +166,7 @@
                                     @foreach($product->all_images as $index => $image)
                                         @if(!$image->is_primary)
                                             <div class="col-md-6">
-                                                <div class="image-upload-area additional-image-upload position-relative" data-index="{{ $index }}">
+                                                <div class="image-upload-area additional-image-upload position-relative" data-index="existing_{{ $image->id }}">
                                                     <input type="file"
                                                            name="additional_images[]"
                                                            class="image-input"
@@ -424,7 +424,7 @@
 @push('scripts')
 <script>
 // Global variables for image upload
-let additionalImageCount = {{ $product->all_images->count() }};
+let additionalImageCount = 100; // Start from 100 to avoid conflicts with existing images
 const uploadedImages = [];
 
 // Global functions for image upload
@@ -469,7 +469,7 @@ function handleAdditionalImageChange(index, input) {
                     <small class="text-muted">${file.name}</small>
                 </div>
             `;
-            updateGalleryPreview();
+            updateAdditionalImagesGallery();
         };
         reader.readAsDataURL(file);
     }
@@ -478,17 +478,18 @@ function handleAdditionalImageChange(index, input) {
 function removeAdditionalImage(index) {
     const imageDiv = document.querySelector(`[data-index="${index}"]`).parentElement;
     imageDiv.remove();
-    updateGalleryPreview();
+    updateAdditionalImagesGallery();
 }
 
 function removeExistingImage(imageId) {
     if (confirm('Are you sure you want to remove this image?')) {
         // Send AJAX request to remove image
-        fetch(`/admin/products/images/${imageId}`, {
+        fetch(`{{ route('admin.products.images.destroy', ':imageId') }}`.replace(':imageId', imageId), {
             method: 'DELETE',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
             }
         })
         .then(response => response.json())
@@ -496,13 +497,44 @@ function removeExistingImage(imageId) {
             if (data.success) {
                 location.reload(); // Reload to show updated images
             } else {
-                alert('Error removing image: ' + data.message);
+                alert('Error removing image: ' + (data.message || 'Unknown error'));
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error removing image');
+            alert('Error removing image. Please try again.');
         });
+    }
+}
+
+function updateAdditionalImagesGallery() {
+    const galleryPreview = document.getElementById('imageGalleryPreview');
+    const galleryContainer = document.getElementById('galleryPreview');
+
+    let images = [];
+
+    // Add only additional images
+    const additionalInputs = document.querySelectorAll('input[name="additional_images[]"]');
+    additionalInputs.forEach((input, index) => {
+        if (input.files[0]) {
+            images.push({
+                url: URL.createObjectURL(input.files[0]),
+                name: `Additional ${index + 1}`,
+                is_primary: false
+            });
+        }
+    });
+
+    if (images.length > 0) {
+        galleryPreview.style.display = 'block';
+        galleryContainer.innerHTML = images.map(img => `
+            <div class="gallery-thumbnail">
+                <img src="${img.url}" alt="${img.name}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
+                <small class="text-muted d-block text-center mt-1">Additional</small>
+            </div>
+        `).join('');
+    } else {
+        galleryPreview.style.display = 'none';
     }
 }
 
@@ -540,7 +572,7 @@ function updateGalleryPreview() {
         galleryContainer.innerHTML = images.map(img => `
             <div class="gallery-thumbnail ${img.is_primary ? 'primary' : ''}">
                 <img src="${img.url}" alt="${img.name}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
-                ${img.is_primary ? '<small class="text-primary d-block text-center mt-1">Main</small>' : ''}
+                ${img.is_primary ? '<small class="text-primary d-block text-center mt-1">Main</small>' : '<small class="text-muted d-block text-center mt-1">Additional</small>'}
             </div>
         `).join('');
     } else {
@@ -1153,6 +1185,103 @@ function archiveProduct() {
 
 .unit-select-wrapper select {
     padding-left: 35px;
+}
+
+/* Image Upload Styles */
+.image-upload-area {
+    border: 2px dashed #dee2e6;
+    border-radius: 10px;
+    background: #f8f9fa;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+}
+
+.image-upload-area:hover {
+    border-color: #667eea;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+}
+
+.image-upload-area .upload-preview {
+    min-height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.image-upload-area .upload-content {
+    text-align: center;
+    padding: 2rem 1rem;
+}
+
+.image-upload-area .upload-content .upload-icon {
+    font-size: 2.5rem;
+    color: #6c757d;
+    margin-bottom: 0.75rem;
+}
+
+.image-upload-area .upload-content .upload-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.image-upload-area .upload-content .upload-text {
+    color: #6c757d;
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+
+.image-upload-area .current-image-preview img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.additional-image-upload {
+    min-height: 150px;
+}
+
+.multiple-images-upload .btn {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.multiple-images-upload .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Gallery Preview Styles */
+#imageGalleryPreview {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 1rem;
+    border: 1px solid #e9ecef;
+}
+
+.gallery-thumbnail {
+    text-align: center;
+}
+
+.gallery-thumbnail img {
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.gallery-thumbnail.primary img {
+    border-color: #667eea;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.gallery-thumbnail img:hover {
+    transform: scale(1.05);
+    border-color: #764ba2;
 }
 </style>
 @endsection
