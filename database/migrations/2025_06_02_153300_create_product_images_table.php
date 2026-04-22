@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('product_images', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('product_id');
+            $table->bigInteger('product_id')->unsigned();
             $table->string('image_path');
             $table->integer('sort_order')->default(0);
             $table->boolean('is_primary')->default(false);
