@@ -1,37 +1,40 @@
 <div class="card h-100 border-0 shadow-sm product-card overflow-hidden">
     @php
-        $imgPath = $product->image_url ? 'product-images/' . $product->image_url : null;
-        $imageSrc = asset('product-images/default_product.png');
-        if ($imgPath && file_exists(public_path($imgPath))) {
-            $imageSrc = asset($imgPath);
-        }
+        // Use the new main_image attribute that supports multiple images
+        $imageSrc = $product->main_image;
     @endphp
-    
+
     <!-- Product Image Container -->
     <div class="position-relative product-image-container">
         <div class="product-image-inner">
-            <img 
-                src="{{ $imageSrc }}" 
-                alt="{{ $product->name }}" 
+            <img
+                src="{{ $imageSrc }}"
+                alt="{{ $product->name }}"
                 class="product-img"
                 loading="lazy"
                 onerror="this.onerror=null; this.src='{{ asset('product-images/default_product.png') }}'"
                 style="max-height: 240px;"
             >
         </div>
-        
+
         @if(!empty($product->is_new))
             <span class="badge bg-secondary position-absolute top-2 start-2 px-2 py-1 fw-normal">
                 <i class="bi bi-star-fill me-1"></i> New
             </span>
         @endif
-        
+
         @if($product->hasDiscount())
             <span class="badge bg-danger position-absolute top-2 end-2 px-2 py-1 fw-bold">
                 {{ number_format($product->discount_percentage, 0) }}% OFF
             </span>
         @endif
-        
+
+        @if($product->all_images->count() > 1)
+            <span class="badge bg-info position-absolute bottom-2 end-2 px-2 py-1 fw-normal" style="font-size: 0.7rem;">
+                <i class="bi bi-images me-1"></i>{{ $product->all_images->count() }} photos
+            </span>
+        @endif
+
         <!-- Quick View Button (shown on hover) -->
         <div class="quick-view-overlay d-flex align-items-center justify-content-center">
             <a href="{{ route('shop.product', $product) }}" class="btn btn-light btn-sm rounded-pill px-3">
@@ -39,7 +42,7 @@
             </a>
         </div>
     </div>
-    
+
     <!-- Product Details -->
     <div class="card-body p-3 d-flex flex-column h-100" style="padding: 1.25rem 1.25rem 1.5rem !important;">
         <!-- Category -->
@@ -59,21 +62,21 @@
                 </div>
             </div>
         @endif
-        
+
         <!-- Product Name -->
         <h3 class="h6 mb-1 product-title">
             <a href="{{ route('shop.product', $product) }}" class="text-decoration-none text-dark">
                 {{ $product->name }}
             </a>
         </h3>
-        
+
         <!-- Product Description -->
         @if(!empty($product->description))
             <p class="small text-muted mb-2 product-description">
                 {{ Str::limit(strip_tags($product->description), 80) }}
             </p>
         @endif
-        
+
         <!-- Price -->
         <div class="mt-2">
             <div class="d-flex justify-content-between align-items-center mb-1">
@@ -96,18 +99,18 @@
                         </span>
                     @endif
                 </div>
-                
+
                 <!-- Add to Cart Button -->
                 <form action="{{ route('cart.add', $product) }}" method="POST" class="d-inline">
                     @csrf
                     <input type="hidden" name="quantity" value="1">
-                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle p-1 add-to-cart-btn" 
+                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle p-1 add-to-cart-btn"
                             data-bs-toggle="tooltip" data-bs-placement="top" title="Add to Cart">
                         <i class="bi bi-cart-plus"></i>
                     </button>
                 </form>
             </div>
-            
+
             <!-- View Details Button -->
             <a href="{{ route('shop.product', $product) }}" class="btn btn-danger w-100 btn-hover-scale" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
                 View Details <i class="bi bi-arrow-right ms-1"></i>
@@ -253,11 +256,11 @@
         margin-left: auto;
         margin-right: auto;
     }
-    
+
     .product-image-container {
         height: 200px;
     }
-    
+
     .product-title {
         font-size: 0.95rem;
     }
@@ -305,14 +308,14 @@ document.addEventListener('DOMContentLoaded', function() {
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
-    
+
     // Add to cart animation
     document.querySelectorAll('.add-to-cart-btn').forEach(button => {
         button.addEventListener('click', function() {
             const icon = this.querySelector('i');
             icon.classList.remove('bi-cart-plus');
             icon.classList.add('bi-check-lg');
-            
+
             setTimeout(() => {
                 icon.classList.remove('bi-check-lg');
                 icon.classList.add('bi-cart-plus');

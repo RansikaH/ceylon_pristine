@@ -55,7 +55,7 @@
     <form action="{{ route('admin.products.update', $product) }}" method="POST" enctype="multipart/form-data" id="productEditForm">
         @csrf
         @method('PUT')
-        
+
         <div class="row">
             <!-- Left Column - Main Information -->
             <div class="col-lg-8">
@@ -74,11 +74,11 @@
                                 </label>
                                 <div class="input-group-modern">
                                     <i class="bi bi-tag input-icon"></i>
-                                    <input type="text" 
-                                           name="name" 
-                                           class="form-control-modern @error('name') is-invalid @enderror" 
-                                           placeholder="Enter product name..." 
-                                           value="{{ old('name', $product->name) }}" 
+                                    <input type="text"
+                                           name="name"
+                                           class="form-control-modern @error('name') is-invalid @enderror"
+                                           placeholder="Enter product name..."
+                                           value="{{ old('name', $product->name) }}"
                                            required
                                            maxlength="255">
                                     <div class="input-counter">
@@ -91,15 +91,15 @@
                                     </div>
                                 @enderror
                             </div>
-                            
+
                             <div class="col-md-12">
                                 <label for="description" class="form-label-modern">
                                     Description <span class="optional">(Optional)</span>
                                 </label>
                                 <div class="textarea-modern">
-                                    <textarea name="description" 
-                                              class="form-control-modern @error('description') is-invalid @enderror" 
-                                              placeholder="Describe your product in detail..." 
+                                    <textarea name="description"
+                                              class="form-control-modern @error('description') is-invalid @enderror"
+                                              placeholder="Describe your product in detail..."
                                               rows="6"
                                               maxlength="1000">{{ old('description', $product->description) }}</textarea>
                                     <div class="textarea-footer">
@@ -119,47 +119,88 @@
                     </div>
                 </div>
 
-                <!-- Product Image Card -->
+                <!-- Product Images Card -->
                 <div class="card shadow modern-card mb-4">
                     <div class="card-header modern-card-header">
                         <h6 class="modern-card-title">
-                            <i class="bi bi-image me-2"></i>Product Image
+                            <i class="bi bi-images me-2"></i>Product Images
                         </h6>
                     </div>
                     <div class="card-body">
-                        <div class="image-edit-area" id="imageEditArea">
-                            <input type="file" 
-                                   name="image" 
-                                   class="image-input" 
-                                   id="imageInput"
-                                   accept="image/*">
-                            <div class="current-image" id="currentImage">
-                                @if($product->image)
-                                    <div class="image-display">
-                                        <img src="{{ asset('storage/'.$product->image) }}" alt="{{ $product->name }}">
-                                        <div class="image-overlay">
-                                            <button type="button" class="btn btn-sm btn-danger" onclick="removeImage()">
-                                                <i class="bi bi-trash"></i> Remove
-                                            </button>
+                        <!-- Main Image Upload -->
+                        <div class="mb-4">
+                            <label class="form-label fw-medium">Main Product Image <span class="text-danger">*</span></label>
+                            <div class="image-upload-area" id="mainImageUploadArea">
+                                <input type="file" name="main_image" class="image-input" id="mainImageInput" accept="image/*">
+                                <div class="upload-preview" id="mainUploadPreview">
+                                    @if($product->main_image)
+                                        <div class="current-image-preview">
+                                            <img src="{{ $product->main_image }}" alt="{{ $product->name }}" style="width: 100%; height: 200px; object-fit: cover;">
+                                            <div class="text-center mt-2">
+                                                <small class="text-muted">Current main image</small>
+                                            </div>
                                         </div>
-                                    </div>
-                                @else
-                                    <div class="image-display">
-                                        <img src="{{ asset('images/default-avatar.png') }}" alt="{{ $product->name }}">
-                                        <div class="image-overlay">
-                                            <button type="button" class="btn btn-sm btn-danger" onclick="removeImage()">
-                                                <i class="bi bi-trash"></i> Remove
-                                            </button>
+                                    @else
+                                        <div class="upload-content">
+                                            <i class="bi bi-cloud-upload upload-icon"></i>
+                                            <h6 class="upload-title">Drop main product image here</h6>
+                                            <p class="upload-text">or click to browse</p>
+                                            <p class="upload-hint">Max size: 2MB</p>
                                         </div>
-                                    </div>
-                                @endif
+                                    @endif
+                                </div>
+                            </div>
+                            @error('main_image')
+                                <div class="error-feedback">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>{{ $message }}
+                                </div>
+                            @enderror
+                        </div>
+
+                        <!-- Additional Images Upload -->
+                        <div class="mb-4">
+                            <label class="form-label fw-medium">Additional Images <small class="text-muted">(Optional)</small></label>
+                            <div class="multiple-images-upload" id="multipleImagesUpload">
+                                <div class="row g-3" id="additionalImagesContainer">
+                                    <!-- Show existing additional images -->
+                                    @foreach($product->all_images as $index => $image)
+                                        @if(!$image->is_primary)
+                                            <div class="col-md-6">
+                                                <div class="image-upload-area additional-image-upload position-relative" data-index="{{ $index }}">
+                                                    <input type="file"
+                                                           name="additional_images[]"
+                                                           class="image-input"
+                                                           id="additionalImage{{ $index }}"
+                                                           accept="image/*">
+                                                    <div class="upload-preview" id="additionalPreview{{ $index }}">
+                                                        <div class="current-image-preview">
+                                                            <img src="{{ asset('product-images/' . $image->image_path) }}" alt="Additional Image {{ $index + 1 }}" style="width: 100%; height: 150px; object-fit: cover;">
+                                                            <div class="text-center mt-2">
+                                                                <small class="text-muted">Additional image {{ $index + 1 }}</small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1" onclick="removeExistingImage({{ $image->id }})">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        @endif
+                                    @endforeach
+                                </div>
+                                <button type="button" class="btn btn-outline-secondary btn-sm mt-3" onclick="addAdditionalImageInput()">
+                                    <i class="bi bi-plus-circle me-2"></i>Add More Images
+                                </button>
                             </div>
                         </div>
-                        @error('image')
-                            <div class="error-feedback">
-                                <i class="bi bi-exclamation-triangle me-1"></i>{{ $message }}
+
+                        <!-- Image Gallery Preview -->
+                        <div id="imageGalleryPreview" class="mt-4" style="display: none;">
+                            <label class="form-label fw-medium">Image Gallery Preview</label>
+                            <div class="d-flex flex-wrap gap-2" id="galleryPreview">
+                                <!-- Gallery thumbnails will appear here -->
                             </div>
-                        @enderror
+                        </div>
                     </div>
                 </div>
             </div>
@@ -181,8 +222,8 @@
                                 </label>
                                 <div class="select-modern">
                                     <i class="bi bi-folder select-icon"></i>
-                                    <select name="category_id" 
-                                            class="form-control-modern @error('category_id') is-invalid @enderror" 
+                                    <select name="category_id"
+                                            class="form-control-modern @error('category_id') is-invalid @enderror"
                                             required>
                                         <option value="">Select Category</option>
                                         @foreach($categories as $category)
@@ -205,13 +246,13 @@
                                 </label>
                                 <div class="price-input-wrapper">
                                     <span class="currency-symbol">LKR</span>
-                                    <input type="number" 
-                                           name="price" 
-                                           class="form-control-modern @error('price') is-invalid @enderror" 
-                                           placeholder="0.00" 
-                                           step="0.01" 
-                                           min="0" 
-                                           value="{{ old('price', $product->price) }}" 
+                                    <input type="number"
+                                           name="price"
+                                           class="form-control-modern @error('price') is-invalid @enderror"
+                                           placeholder="0.00"
+                                           step="0.01"
+                                           min="0"
+                                           value="{{ old('price', $product->price) }}"
                                            required>
                                 </div>
                                 @error('price')
@@ -227,19 +268,19 @@
                                 </label>
                                 <div class="unit-input-group">
                                     <div class="unit-value-wrapper">
-                                        <input type="number" 
-                                               name="unit_value" 
-                                               class="form-control-modern @error('unit_value') is-invalid @enderror" 
-                                               placeholder="1" 
-                                               step="0.01" 
-                                               min="0.01" 
-                                               value="{{ old('unit_value', $product->unit_value ?? 1) }}" 
+                                        <input type="number"
+                                               name="unit_value"
+                                               class="form-control-modern @error('unit_value') is-invalid @enderror"
+                                               placeholder="1"
+                                               step="0.01"
+                                               min="0.01"
+                                               value="{{ old('unit_value', $product->unit_value ?? 1) }}"
                                                required>
                                     </div>
                                     <div class="select-modern unit-select-wrapper">
                                         <i class="bi bi-rulers select-icon"></i>
-                                        <select name="unit" 
-                                                class="form-control-modern @error('unit') is-invalid @enderror" 
+                                        <select name="unit"
+                                                class="form-control-modern @error('unit') is-invalid @enderror"
                                                 required>
                                             <option value="">Select Unit</option>
                                             <option value="pcs" {{ old('unit', $product->unit ?? 'pcs') == 'pcs' ? 'selected' : '' }}>Pieces</option>
@@ -275,12 +316,12 @@
                                 </label>
                                 <div class="stock-input-wrapper">
                                     <i class="bi bi-box input-icon"></i>
-                                    <input type="number" 
-                                           name="stock" 
-                                           class="form-control-modern @error('stock') is-invalid @enderror" 
-                                           placeholder="0" 
-                                           min="0" 
-                                           value="{{ old('stock', $product->stock) }}" 
+                                    <input type="number"
+                                           name="stock"
+                                           class="form-control-modern @error('stock') is-invalid @enderror"
+                                           placeholder="0"
+                                           min="0"
+                                           value="{{ old('stock', $product->stock) }}"
                                            required>
                                     <div class="stock-status" id="stockStatus">
                                         @if($product->stock > 10)
@@ -382,13 +423,137 @@
 
 @push('scripts')
 <script>
+// Global variables for image upload
+let additionalImageCount = {{ $product->all_images->count() }};
+const uploadedImages = [];
+
+// Global functions for image upload
+function addAdditionalImageInput() {
+    additionalImageCount++;
+    const container = document.getElementById('additionalImagesContainer');
+    const imageDiv = document.createElement('div');
+    imageDiv.className = 'col-md-6';
+    imageDiv.innerHTML = `
+        <div class="image-upload-area additional-image-upload position-relative" data-index="${additionalImageCount}">
+            <input type="file"
+                   name="additional_images[]"
+                   class="image-input"
+                   id="additionalImage${additionalImageCount}"
+                   accept="image/*"
+                   onchange="handleAdditionalImageChange(${additionalImageCount}, this)">
+            <div class="upload-preview" id="additionalPreview${additionalImageCount}">
+                <div class="upload-content">
+                    <i class="bi bi-cloud-upload upload-icon"></i>
+                    <h6 class="upload-title">Additional image ${additionalImageCount}</h6>
+                    <p class="upload-text">click to browse</p>
+                </div>
+            </div>
+            <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1" onclick="removeAdditionalImage(${additionalImageCount})">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+    `;
+    container.appendChild(imageDiv);
+}
+
+function handleAdditionalImageChange(index, input) {
+    const file = input.files[0];
+    const preview = document.getElementById(`additionalPreview${index}`);
+
+    if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.innerHTML = `
+                <img src="${e.target.result}" alt="Additional Image ${index}" style="width: 100%; height: 150px; object-fit: cover;">
+                <div class="text-center mt-2">
+                    <small class="text-muted">${file.name}</small>
+                </div>
+            `;
+            updateGalleryPreview();
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function removeAdditionalImage(index) {
+    const imageDiv = document.querySelector(`[data-index="${index}"]`).parentElement;
+    imageDiv.remove();
+    updateGalleryPreview();
+}
+
+function removeExistingImage(imageId) {
+    if (confirm('Are you sure you want to remove this image?')) {
+        // Send AJAX request to remove image
+        fetch(`/admin/products/images/${imageId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload(); // Reload to show updated images
+            } else {
+                alert('Error removing image: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error removing image');
+        });
+    }
+}
+
+function updateGalleryPreview() {
+    const galleryPreview = document.getElementById('imageGalleryPreview');
+    const galleryContainer = document.getElementById('galleryPreview');
+    const mainImageInput = document.getElementById('mainImageInput');
+    const mainImage = mainImageInput.files[0];
+
+    let images = [];
+
+    // Add main image
+    if (mainImage) {
+        images.push({
+            url: URL.createObjectURL(mainImage),
+            name: 'Main Image',
+            is_primary: true
+        });
+    }
+
+    // Add additional images
+    const additionalInputs = document.querySelectorAll('input[name="additional_images[]"]');
+    additionalInputs.forEach((input, index) => {
+        if (input.files[0]) {
+            images.push({
+                url: URL.createObjectURL(input.files[0]),
+                name: `Additional ${index + 1}`,
+                is_primary: false
+            });
+        }
+    });
+
+    if (images.length > 0) {
+        galleryPreview.style.display = 'block';
+        galleryContainer.innerHTML = images.map(img => `
+            <div class="gallery-thumbnail ${img.is_primary ? 'primary' : ''}">
+                <img src="${img.url}" alt="${img.name}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
+                ${img.is_primary ? '<small class="text-primary d-block text-center mt-1">Main</small>' : ''}
+            </div>
+        `).join('');
+    } else {
+        galleryPreview.style.display = 'none';
+    }
+}
+
 // Form validation and interactions
 document.addEventListener('DOMContentLoaded', function() {
     const nameInput = document.querySelector('input[name="name"]');
     const descTextarea = document.querySelector('textarea[name="description"]');
     const stockInput = document.querySelector('input[name="stock"]');
     const priceInput = document.querySelector('input[name="price"]');
-    const imageInput = document.getElementById('imageInput');
     const form = document.getElementById('productEditForm');
 
     // Character counters
@@ -403,7 +568,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Stock status update
     stockInput.addEventListener('input', function() {
         const stockStatus = document.getElementById('stockStatus');
-        
+
         if (this.value > 10) {
             stockStatus.innerHTML = '<i class="bi bi-check-circle text-success"></i><span>In Stock</span>';
         } else if (this.value > 0) {
@@ -413,24 +578,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Image upload preview
-    imageInput.addEventListener('change', function(e) {
+    // Main image upload preview
+    const mainImageInput = document.getElementById('mainImageInput');
+    mainImageInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
-        const currentImage = document.getElementById('currentImage');
-        
+        const previewImage = document.getElementById('mainUploadPreview');
+
         if (file && file.type.startsWith('image/')) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                currentImage.innerHTML = `
-                    <div class="image-display">
-                        <img src="${e.target.result}" alt="Preview">
-                        <div class="image-overlay">
-                            <button type="button" class="btn btn-sm btn-danger" onclick="removeImage()">
-                                <i class="bi bi-trash"></i> Remove
-                            </button>
+                previewImage.innerHTML = `
+                    <div class="current-image-preview">
+                        <img src="${e.target.result}" alt="Preview" style="width: 100%; height: 200px; object-fit: cover;">
+                        <div class="text-center mt-2">
+                            <small class="text-muted">New main image</small>
                         </div>
                     </div>
                 `;
+                updateGalleryPreview();
             };
             reader.readAsDataURL(file);
         }
@@ -446,44 +611,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Quick action functions
 function quickView() {
-    // Open product in new tab or modal
-    console.log('Viewing product live');
+    window.open(`/shop/product/{{ $product->slug }}`, '_blank');
 }
 
 function duplicateProduct() {
     if (confirm('Create a duplicate of this product?')) {
-        // Redirect to create with pre-filled data
-        console.log('Duplicating product');
+        window.location.href = `/admin/products/{{ $product->id }}/duplicate`;
     }
 }
 
 function viewAnalytics() {
-    // Show product analytics
-    console.log('Viewing analytics');
+    alert('Analytics feature coming soon!');
 }
 
 function exportProduct() {
-    // Export product data
-    console.log('Exporting product');
+    alert('Export feature coming soon!');
 }
 
 function archiveProduct() {
     if (confirm('Archive this product? It will be hidden from the catalog.')) {
-        // Archive product
-        console.log('Archiving product');
+        alert('Archive feature coming soon!');
     }
-}
-
-function removeImage() {
-    const currentImage = document.getElementById('currentImage');
-    currentImage.innerHTML = `
-        <div class="upload-content">
-            <i class="bi bi-cloud-upload upload-icon"></i>
-            <h6 class="upload-title">Add product image</h6>
-            <p class="upload-text">Click to browse or drag and drop</p>
-            <p class="upload-hint">Max size: 2MB • JPG, PNG, GIF</p>
-        </div>
-    `;
 }
 </script>
 @endpush

@@ -12,7 +12,7 @@ class ProductController extends Controller
     {
         $categoryId = $request->query('category');
         $categories = \App\Models\Category::all();
-        $products = \App\Models\Product::with('category')
+        $products = \App\Models\Product::with(['category', 'images', 'primaryImage'])
             ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
             ->orderBy('id', 'desc')
             ->take(4)->get();
@@ -28,6 +28,8 @@ class ProductController extends Controller
     // Customer-facing: product detail
     public function shopShow(\App\Models\Product $product)
     {
+        // Load product with images for gallery
+        $product->load(['images', 'primaryImage', 'category']);
         return view('shop.show', compact('product'));
     }
 
@@ -38,7 +40,7 @@ class ProductController extends Controller
         $minPrice = $request->query('min_price');
         $maxPrice = $request->query('max_price');
         $categories = \App\Models\Category::all();
-        $products = \App\Models\Product::with('category')
+        $products = \App\Models\Product::with(['category', 'images', 'primaryImage'])
             ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
             ->when($minPrice !== null && $minPrice !== '', fn($q) => $q->where('price', '>=', $minPrice))
             ->when($maxPrice !== null && $maxPrice !== '', fn($q) => $q->where('price', '<=', $maxPrice))
