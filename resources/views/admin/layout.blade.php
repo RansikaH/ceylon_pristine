@@ -6,29 +6,29 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin Panel') - {{ config('app.name', 'Ceylon Moms') }}</title>
-    
+
     <!-- Favicon -->
     <link rel="shortcut icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
-    
+
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    
+
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <!-- DataTables CSS -->
     <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.bootstrap5.min.css" rel="stylesheet">
-    
+
     <!-- Custom CSS -->
     <link href="{{ asset('css/admin.css') }}" rel="stylesheet">
-    
+
     @stack('styles')
     <style>
         /* Modern Navigation Styling */
@@ -38,7 +38,7 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
-        
+
         /* Message Badge Styling */
         #nav-message-count {
             position: absolute !important;
@@ -56,18 +56,18 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
             border: 2px solid #667eea !important;
         }
-        
+
         #navbarDropdownMessages {
             position: relative !important;
             display: inline-flex !important;
             align-items: center !important;
             padding: 0.5rem 0.75rem !important;
         }
-        
+
         #navbarDropdownMessages i.bi-envelope {
             font-size: 1.25rem !important;
         }
-        
+
         .navbar-brand {
             font-weight: 700;
             font-size: 1.3rem;
@@ -77,16 +77,16 @@
             align-items: center;
             transition: opacity 0.2s ease;
         }
-        
+
         .navbar-brand:hover {
             opacity: 0.9;
         }
-        
+
         .navbar-brand i {
             font-size: 1.5rem;
             margin-right: 0.5rem;
         }
-        
+
         .nav-link {
             font-weight: 500;
             padding: 0.625rem 1.125rem !important;
@@ -97,7 +97,7 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         .nav-link::before {
             content: '';
             position: absolute;
@@ -108,45 +108,45 @@
             background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
             transition: left 0.5s;
         }
-        
+
         .nav-link:hover, .nav-link:focus {
             background-color: rgba(255, 255, 255, 0.15);
             color: #fff !important;
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
-        
+
         .nav-link:hover::before {
             left: 100%;
         }
-        
+
         .nav-link.active {
             background-color: rgba(255, 255, 255, 0.2);
             color: #fff !important;
             font-weight: 600;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
-        
+
         .nav-link i {
             margin-right: 0.375rem;
             font-size: 1rem;
         }
-        
+
         .navbar-toggler {
             border: 2px solid rgba(255, 255, 255, 0.3);
             padding: 0.25rem 0.5rem;
             transition: all 0.2s ease;
         }
-        
+
         .navbar-toggler:hover {
             border-color: rgba(255, 255, 255, 0.6);
             background-color: rgba(255, 255, 255, 0.1);
         }
-        
+
         .navbar-toggler:focus {
             box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25);
         }
-        
+
         .dropdown-menu {
             border: none;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
@@ -158,7 +158,7 @@
             min-width: 250px;
             width: auto;
         }
-        
+
         .dropdown-item {
             padding: 0.625rem 1.25rem;
             font-weight: 400;
@@ -169,23 +169,23 @@
             color: #495057;
             white-space: nowrap;
         }
-        
+
         .dropdown-item:hover, .dropdown-item:focus {
             background-color: #f8f9fa;
             color: #667eea;
             transform: translateX(4px);
         }
-        
+
         .dropdown-item i {
             margin-right: 0.5rem;
             opacity: 0.7;
         }
-        
+
         .dropdown-divider {
             margin: 0.75rem 0;
             border-color: rgba(0, 0, 0, 0.05);
         }
-        
+
         .dropdown-header {
             font-weight: 600;
             color: #495057;
@@ -194,7 +194,7 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        
+
         /* Mobile menu styles */
         @media (max-width: 991.98px) {
             .navbar-collapse {
@@ -206,21 +206,21 @@
                 backdrop-filter: blur(10px);
                 border: 1px solid rgba(255, 255, 255, 0.1);
             }
-            
+
             .nav-item {
                 margin: 0.375rem 0;
             }
-            
+
             .nav-link {
                 color: rgba(255, 255, 255, 0.9) !important;
                 padding: 0.75rem 1rem !important;
             }
-            
+
             .nav-link:hover, .nav-link.active {
                 background-color: rgba(255, 255, 255, 0.15);
                 color: #fff !important;
             }
-            
+
             .dropdown-menu {
                 margin-left: 1rem;
                 margin-top: 0.5rem;
@@ -230,19 +230,19 @@
                 min-width: 200px;
                 width: auto;
             }
-            
+
             .dropdown-item {
                 color: #495057;
                 padding: 0.625rem 1rem;
                 white-space: nowrap;
             }
-            
+
             .dropdown-item:hover {
                 color: #667eea;
                 background-color: rgba(102, 126, 234, 0.1);
             }
         }
-        
+
         /* Modern Search bar */
         .input-group .form-control {
             min-width: 240px;
@@ -254,18 +254,18 @@
             padding: 0.625rem 1.25rem;
             transition: all 0.3s ease;
         }
-        
+
         .input-group .form-control::placeholder {
             color: rgba(255, 255, 255, 0.6);
         }
-        
+
         .input-group .form-control:focus {
             background-color: rgba(255, 255, 255, 0.15);
             border-color: rgba(255, 255, 255, 0.3);
             box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.1);
             color: #fff;
         }
-        
+
         .input-group .btn {
             border-radius: 0 25px 25px 0;
             border: 2px solid rgba(255, 255, 255, 0.2);
@@ -275,7 +275,7 @@
             padding: 0.625rem 1rem;
             transition: all 0.3s ease;
         }
-        
+
         .input-group .btn:hover {
             background-color: rgba(255, 255, 255, 0.2);
             border-color: rgba(255, 255, 255, 0.4);
@@ -312,6 +312,11 @@
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}" href="{{ route('admin.categories.index') }}">
                         <i class="bi bi-tags me-1"></i> Categories
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('admin.sliders.*') ? 'active' : '' }}" href="{{ route('admin.sliders.index') }}">
+                        <i class="bi bi-images me-1"></i> Sliders
                     </a>
                 </li>
                 <li class="nav-item">
@@ -357,11 +362,11 @@
                     </ul>
                 </li>
             </ul>
-            
+
         </div>
-        
-        
-        
+
+
+
         <!-- User Dropdown -->
         <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4 d-flex align-items-center">
             <!-- Messages Dropdown -->
@@ -389,7 +394,7 @@
                     </a>
                 </div>
             </li>
-            
+
             @push('scripts')
             <script>
             document.addEventListener('DOMContentLoaded', function() {
@@ -397,14 +402,14 @@
                 const notificationDropdown = document.getElementById('navbarDropdownNotifications');
                 const notificationContainer = document.getElementById('notification-container');
                 let loaded = false;
-                
+
                 notificationDropdown.addEventListener('shown.bs.dropdown', function() {
                     if (!loaded) {
                         loadNotifications();
                         loaded = true;
                     }
                 });
-                
+
                 // Mark all as read
                 document.querySelector('.mark-all-read')?.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -426,19 +431,19 @@
                         }
                     });
                 });
-                
+
                 function loadNotifications() {
                     fetch('{{ route("admin.notifications.latest") }}')
                         .then(response => response.json())
                         .then(data => {
                             const container = document.getElementById('notification-container');
                             const loading = document.getElementById('notification-loading');
-                            
+
                             if (loading) loading.remove();
-                            
+
                             if (data.notifications && data.notifications.length > 0) {
                                 container.innerHTML = data.notifications.map(notification => `
-                                    <a class="dropdown-item d-flex align-items-center py-2 ${!notification.read_at ? 'bg-light' : ''}" 
+                                    <a class="dropdown-item d-flex align-items-center py-2 ${!notification.read_at ? 'bg-light' : ''}"
                                        href="${notification.data.url || '#'}">
                                         <div class="me-3">
                                             <div class="${getNotificationIcon(notification.type).bgClass} rounded-circle p-2">
@@ -464,7 +469,7 @@
                             }
                         });
                 }
-                
+
                 function getNotificationIcon(type) {
                     const icons = {
                         order: { icon: 'bi-cart', bgClass: 'bg-primary bg-opacity-10 text-primary' },
@@ -474,12 +479,12 @@
                     };
                     return icons[type] || icons.default;
                 }
-                
+
                 function formatTime(dateString) {
                     const date = new Date(dateString);
                     const now = new Date();
                     const diffInSeconds = Math.floor((now - date) / 1000);
-                    
+
                     if (diffInSeconds < 60) return 'Just now';
                     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
                     if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
@@ -504,7 +509,7 @@
                 }
             </style>
             @endpush
-            
+
             <!-- User Dropdown -->
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdownUser" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -548,7 +553,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 @endif
-                
+
                 @if($errors->any())
                     <div class="alert alert-danger alert-dismissible fade show mt-4" role="alert">
                         <i class="bi bi-exclamation-triangle me-2"></i>
@@ -560,10 +565,10 @@
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 @endif
-                
+
                 @yield('content')
             </main>
-            
+
             <footer class="py-4 bg-light mt-auto">
                 <div class="container px-4">
                     <div class="d-flex align-items-center justify-content-between small">
@@ -578,17 +583,17 @@
             </footer>
         </div>
     </div>
-    
+
     <!-- JavaScript Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/umd/simple-datatables.min.js"></script>
-    
+
     <!-- Custom Scripts -->
     <script src="{{ asset('js/admin.js') }}"></script>
-    
+
     @stack('scripts')
-    
+
     <script>
         // Initialize tooltips
         document.addEventListener('DOMContentLoaded', function() {
@@ -596,7 +601,7 @@
             var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
                 return new bootstrap.Tooltip(tooltipTriggerEl);
             });
-            
+
             // Prevent disabled dropdowns from opening
             document.querySelectorAll('.dropdown-toggle[style*="cursor: not-allowed"]').forEach(function(element) {
                 element.addEventListener('click', function(e) {
@@ -605,7 +610,7 @@
                     return false;
                 });
             });
-            
+
             // Update message count in navigation
             function updateNavMessageCount() {
                 fetch('{{ route("admin.chat.conversations") }}')
@@ -615,21 +620,21 @@
                         const badge = document.getElementById('nav-message-count');
                         const count = document.getElementById('nav-unread-count');
                         const messageList = document.getElementById('nav-message-list');
-                        
+
                         if (totalUnread > 0) {
                             count.textContent = totalUnread;
                             badge.classList.remove('d-none');
-                            
+
                             // Update dropdown with recent conversations
                             let dropdownHtml = '';
                             const recentConversations = data.conversations.slice(0, 3);
-                            
+
                             if (recentConversations.length > 0) {
                                 recentConversations.forEach(conv => {
                                     dropdownHtml += `
                                         <a href="${conv.user.id}" class="dropdown-item d-flex align-items-center" onclick="window.location.href='{{ route('admin.chat.index') }}'">
                                             <div class="me-3">
-                                                ${conv.user.avatar ? 
+                                                ${conv.user.avatar ?
                                                     `<img src="${conv.user.avatar}" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;" onerror="this.src='{{ asset('images/default-avatar.png') }}';">` :
                                                     `<div class="rounded-circle d-flex align-items-center justify-content-center bg-primary text-white" style="width: 40px; height: 40px;">
                                                         ${conv.user.name.charAt(0).toUpperCase()}
@@ -655,7 +660,7 @@
                                     </div>
                                 `;
                             }
-                            
+
                             messageList.innerHTML = dropdownHtml;
                         } else {
                             badge.classList.add('d-none');
@@ -671,7 +676,7 @@
                         console.error('Error fetching message count:', error);
                     });
             }
-            
+
             // Update message count immediately and then every 30 seconds
             updateNavMessageCount();
             setInterval(updateNavMessageCount, 30000);

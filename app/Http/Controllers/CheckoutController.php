@@ -13,6 +13,22 @@ class CheckoutController extends Controller
     public function index()
     {
         $cart = session()->get('cart', []);
+
+        // Refresh delivery information and image for all cart items
+        foreach ($cart as $productId => &$item) {
+            $product = Product::find($productId);
+            if ($product) {
+                // Update delivery information with latest product data
+                $item['delivery_info'] = $product->delivery_info;
+                $item['delivery_fee'] = $product->calculateDeliveryFee($item['quantity']);
+                // Update main image to reflect any changes
+                $item['image'] = $product->main_image;
+            }
+        }
+
+        // Update session with refreshed cart data
+        session(['cart' => $cart]);
+
         return view('shop.checkout', compact('cart'));
     }
 
@@ -22,19 +38,19 @@ class CheckoutController extends Controller
         if (empty($cart)) {
             return redirect()->route('cart.index')->with('error', 'Your cart is empty. Please add items before checkout.');
         }
-        
+
         $validationRules = [
             'customer_name' => 'required|string|max:255',
             'customer_email' => 'required|email|max:255',
             'customer_phone' => 'nullable|string|max:20|regex:/^[0-9+\-\s()]+$/',
         ];
-        
+
         // Get payment method without strict validation for now
         $payment_method = $request->input('payment_method', 'cod');
-        
+
         // Check if using saved address
         $useSavedAddress = $request->has('use_saved_address');
-        
+
         // Only require address fields if not using saved address
         if (!$useSavedAddress) {
             $validationRules = array_merge($validationRules, [
@@ -45,7 +61,7 @@ class CheckoutController extends Controller
                 'postal_code' => 'nullable|string|max:20|regex:/^[0-9]+$/',
             ]);
         }
-        
+
         $data = $request->validate($validationRules, [
             'customer_name.required' => 'Your name is required.',
             'customer_email.required' => 'Your email address is required.',
@@ -56,7 +72,7 @@ class CheckoutController extends Controller
             'postal_code.regex' => 'Postal code should contain only numbers.',
             'customer_phone.regex' => 'Phone number format is invalid.',
         ]);
-        
+
         // If using saved address, get data from user profile
         if ($useSavedAddress && auth()->check()) {
             $user = auth()->user();
@@ -66,7 +82,7 @@ class CheckoutController extends Controller
                 'city' => $user->city,
                 'district' => $user->district
             ]));
-            
+
             $data['address_line_1'] = $user->address_line_1 ?? '';
             $data['address_line_2'] = $user->address_line_2 ?? '';
             $data['city'] = $user->city ?? '';
@@ -76,16 +92,22 @@ class CheckoutController extends Controller
             $data['customer_email'] = $user->email ?? '';
             $data['customer_phone'] = $user->phone ?? '';
         }
-        
+
         // Add payment method to data
         $data['payment_method'] = $payment_method;
-        
-        // Calculate total using discounted prices
-        $total = collect($cart)->sum(function($item) {
+
+        // Calculate total using discounted prices and delivery fees
+        $subtotal = collect($cart)->sum(function($item) {
             $price = $item['discounted_price'] ?? $item['price'];
             return $price * $item['quantity'];
         });
-        
+
+        $deliveryTotal = collect($cart)->sum(function($item) {
+            return $item['delivery_fee'] ?? 0;
+        });
+
+        $total = $subtotal + $deliveryTotal;
+
         // Prepare address data for order
         $addressData = [
             'address_line_1' => $data['address_line_1'] ?? '',
@@ -94,16 +116,16 @@ class CheckoutController extends Controller
             'district' => $data['district'] ?? '',
             'postal_code' => $data['postal_code'] ?? '',
         ];
-        
+
         $orderData = [
             'user_id' => auth()->check() ? auth()->id() : null,
             'customer_name' => $data['customer_name'],
             'customer_email' => $data['customer_email'],
             'customer_phone' => $data['customer_phone'] ?? '',
-            'customer_address' => trim(($data['address_line_1'] ?? '') . ', ' . 
-                                   ($data['address_line_2'] ?? '') . ', ' . 
-                                   ($data['city'] ?? '') . ', ' . 
-                                   ($data['district'] ?? '') . ' ' . 
+            'customer_address' => trim(($data['address_line_1'] ?? '') . ', ' .
+                                   ($data['address_line_2'] ?? '') . ', ' .
+                                   ($data['city'] ?? '') . ', ' .
+                                   ($data['district'] ?? '') . ' ' .
                                    ($data['postal_code'] ?? ''), ', '),
             'address_line_1' => $addressData['address_line_1'],
             'address_line_2' => $addressData['address_line_2'],
@@ -115,20 +137,20 @@ class CheckoutController extends Controller
             'items' => array_values($cart),
             'status' => 'pending',
         ];
-        
+
         // Log the incoming data for debugging
         \Log::info('Checkout request data: ', $request->all());
         \Log::info('Validated data: ', $data);
         \Log::info('Order data to be created: ', $orderData);
-        
+
         $order = \App\Models\Order::create($orderData);
-        
+
         // Log order creation as activity
         ActivityLogger::orderCreated($order);
-        
+
         // Log successful order creation
         \Log::info('Order created successfully: #' . $order->id);
-        
+
         // Save address to user profile if requested and user is authenticated
         if (auth()->check() && $request->has('save_address') && !$request->has('use_saved_address')) {
             auth()->user()->update([
@@ -140,7 +162,7 @@ class CheckoutController extends Controller
                 'postal_code' => $data['postal_code'],
             ]);
         }
-        
+
         session()->forget('cart');
         return redirect()->route('shop.home')->with('success', 'Order placed successfully! Your order #' . $order->id . ' has been received.');
     }

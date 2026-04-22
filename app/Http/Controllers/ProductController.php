@@ -12,18 +12,24 @@ class ProductController extends Controller
     {
         $categoryId = $request->query('category');
         $categories = \App\Models\Category::all();
-        $products = \App\Models\Product::with('category')
+        $products = \App\Models\Product::with(['category', 'images', 'primaryImage'])
             ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
             ->orderBy('id', 'desc')
             ->take(4)->get();
         $totalProducts = \App\Models\Product::when($categoryId, fn($q) => $q->where('category_id', $categoryId))->count();
         $showViewMore = $totalProducts > 4;
-        return view('shop.index', compact('products', 'categories', 'categoryId', 'showViewMore'));
+
+        // Get active sliders for homepage
+        $sliders = \App\Models\Slider::active()->ordered()->get();
+
+        return view('shop.index', compact('products', 'categories', 'categoryId', 'showViewMore', 'sliders'));
     }
 
     // Customer-facing: product detail
     public function shopShow(\App\Models\Product $product)
     {
+        // Load product with images for gallery
+        $product->load(['images', 'primaryImage', 'category']);
         return view('shop.show', compact('product'));
     }
 
@@ -34,7 +40,7 @@ class ProductController extends Controller
         $minPrice = $request->query('min_price');
         $maxPrice = $request->query('max_price');
         $categories = \App\Models\Category::all();
-        $products = \App\Models\Product::with('category')
+        $products = \App\Models\Product::with(['category', 'images', 'primaryImage'])
             ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
             ->when($minPrice !== null && $minPrice !== '', fn($q) => $q->where('price', '>=', $minPrice))
             ->when($maxPrice !== null && $maxPrice !== '', fn($q) => $q->where('price', '<=', $maxPrice))

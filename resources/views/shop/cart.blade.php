@@ -9,7 +9,7 @@
                     <i class="bi bi-cart3 me-2" style="font-size: 1.5rem; color: #50946c;"></i>
                     <h2 class="h4 fw-bold mb-0" style="color: #50946c;">{{ __('Shopping Cart') }}</h2>
                 </div>
-                
+
                 <div class="card-body p-4">
                     @if(empty($cart))
                         <div class="text-center py-5">
@@ -34,12 +34,14 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @php $total = 0; $totalSavings = 0; @endphp
+                                        @php $total = 0; $totalSavings = 0; $totalDelivery = 0; @endphp
                                         @foreach($cart as $item)
-                                        @php 
+                                        @php
                                             $itemPrice = $item['discounted_price'] ?? $item['price'];
-                                            $subtotal = $itemPrice * $item['quantity']; 
+                                            $subtotal = $itemPrice * $item['quantity'];
+                                            $deliveryFee = $item['delivery_fee'] ?? 0;
                                             $total += $subtotal;
+                                            $totalDelivery += $deliveryFee;
                                             if (isset($item['discount_percentage']) && $item['discount_percentage'] > 0) {
                                                 $itemSavings = ($item['price'] - $itemPrice) * $item['quantity'];
                                                 $totalSavings += $itemSavings;
@@ -48,19 +50,26 @@
                                         <tr>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    @php
-                                                        $imgPath = $item['image'] ? 'storage/' . $item['image'] : null;
-                                                        $defaultImage = asset('product-images/default_product.png');
-                                                        $imageSrc = $defaultImage;
-                                                        if ($imgPath && file_exists(public_path($imgPath))) {
-                                                            $imageSrc = asset($imgPath);
-                                                        }
-                                                    @endphp
-                                                    <img src="{{ $imageSrc }}" width="60" height="60" class="me-3 rounded-3 border shadow-sm cart-img-hover" alt="{{ $item['name'] }}" style="object-fit:cover;">
+                                                    <img src="{{ $item['image'] }}" width="60" height="60" class="me-3 rounded-3 border shadow-sm cart-img-hover" alt="{{ $item['name'] }}" style="object-fit:cover;" onerror="this.onerror=null; this.src='{{ asset('product-images/default_product.png') }}'">
                                                     <div>
                                                         <span class="fw-medium d-block">{{ $item['name'] }}</span>
                                                         @if(isset($item['discount_percentage']) && $item['discount_percentage'] > 0)
                                                             <span class="badge bg-danger small">{{ number_format($item['discount_percentage'], 0) }}% OFF</span>
+                                                        @endif
+                                                        @if(isset($item['delivery_info']) && ($item['delivery_info']['has_free_delivery'] || $item['delivery_info']['delivery_fee'] > 0))
+                                                            <div class="small text-muted mt-1">
+                                                                @if($item['delivery_info']['has_free_delivery'])
+                                                                    <i class="bi bi-truck text-success"></i>
+                                                                    @if($item['quantity'] >= $item['delivery_info']['free_delivery_quantity'])
+                                                                        <span class="text-success">Free delivery</span>
+                                                                    @else
+                                                                        <span>Free delivery from {{ $item['delivery_info']['free_delivery_quantity'] }} units</span>
+                                                                    @endif
+                                                                @else
+                                                                    <i class="bi bi-truck text-warning"></i>
+                                                                    <span>Delivery: LKR {{ number_format($item['delivery_fee'], 2) }}</span>
+                                                                @endif
+                                                            </div>
                                                         @endif
                                                     </div>
                                                 </div>
@@ -111,7 +120,7 @@
                                     </tbody>
                                 </table>
                             </div>
-                            
+
                             <div class="card mt-4 border-0 bg-light">
                                 <div class="card-body">
                                     @if($totalSavings > 0)
@@ -120,13 +129,24 @@
                                             <span class="fw-semibold">LKR {{ number_format($totalSavings, 2) }}</span>
                                         </div>
                                     @endif
+                                    @if($totalDelivery > 0)
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="small">{{ __('Delivery Fees') }}:</span>
+                                            <span class="fw-semibold">LKR {{ number_format($totalDelivery, 2) }}</span>
+                                        </div>
+                                    @endif
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="h5 mb-0 text-secondary">{{ __('Subtotal') }}:</span>
+                                        <span class="h5 mb-0 fw-medium">LKR {{ number_format($total,2) }}</span>
+                                    </div>
+                                    <hr class="my-2">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <span class="h5 mb-0 text-secondary">{{ __('Total') }}:</span>
-                                        <span class="h4 mb-0 fw-bold" style="color:#50946c;">LKR {{ number_format($total,2) }}</span>
+                                        <span class="h4 mb-0 fw-bold" style="color:#50946c;">LKR {{ number_format($total + $totalDelivery,2) }}</span>
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mt-4">
                                 <a href="{{ route('shop.home') }}" class="btn btn-secondary rounded-pill px-4 py-2 fw-semibold">
                                     <i class="bi bi-arrow-left me-2"></i>{{ __('Continue Shopping') }}
@@ -148,32 +168,32 @@
     .cart-img-hover {
         transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
-    
+
     .cart-img-hover:hover {
         transform: scale(1.04) rotate(-1deg);
         box-shadow: 0 8px 32px 0 rgba(80,148,108,0.15);
     }
-    
+
     .btn-success {
         background-color: #50946c;
         border-color: #50946c;
     }
-    
+
     .btn-success:hover {
         background-color: #3d7254;
         border-color: #3d7254;
     }
-    
+
     .btn-outline-success {
         color: #50946c;
         border-color: #50946c;
     }
-    
+
     .btn-outline-success:hover {
         background-color: #50946c;
         border-color: #50946c;
     }
-    
+
     .btn-secondary:hover {
         background-color: #c52b36;
         border-color: #c52b36;
@@ -184,24 +204,24 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Add form validation for cart update forms
     const cartForms = document.querySelectorAll('form[action*="cart.update"]');
-    
+
     cartForms.forEach(form => {
         form.addEventListener('submit', function(e) {
             const quantityInput = this.querySelector('input[name="quantity"]');
             const quantity = parseFloat(quantityInput.value);
-            
+
             console.log('Form submitting with quantity:', quantity);
-            
+
             if (isNaN(quantity) || quantity < 0.1) {
                 e.preventDefault();
                 alert('Please enter a valid quantity (minimum 0.1)');
                 return false;
             }
-            
+
             // Log for debugging
             console.log('Cart update form submitted successfully');
         });
-        
+
         // Add input validation
         const quantityInput = form.querySelector('input[name="quantity"]');
         quantityInput.addEventListener('input', function() {
