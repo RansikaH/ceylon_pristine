@@ -43,21 +43,21 @@ require __DIR__.'/notifications.php';
 Route::group(['middleware' => ['admin'], 'prefix' => 'admin', 'as' => 'admin.'], function() {
     // Dashboard
     Route::get('dashboard', 'App\Http\Controllers\Admin\DashboardController@index')->name('dashboard');
-    
+
     // Profile Management
     Route::get('profile', [App\Http\Controllers\Admin\AdminProfileController::class, 'edit'])->name('profile.edit');
     Route::put('profile', [App\Http\Controllers\Admin\AdminProfileController::class, 'update'])->name('profile.update');
     Route::put('profile/password', [App\Http\Controllers\Admin\AdminProfileController::class, 'updatePassword'])->name('profile.update-password');
     Route::delete('profile/avatar', [App\Http\Controllers\Admin\AdminProfileController::class, 'removeAvatar'])->name('profile.remove-avatar');
     Route::get('profile/api', [App\Http\Controllers\Admin\AdminProfileController::class, 'getProfile'])->name('profile.api');
-    
+
     // Chat Routes
     Route::get('chat', [MessageController::class, 'adminIndex'])->name('chat.index');
     Route::get('chat/{user}', [MessageController::class, 'adminChatWith'])->name('chat.with');
     Route::post('chat/{user}/send', [MessageController::class, 'adminSend'])->name('chat.send');
     Route::get('chat/{user}/messages', [MessageController::class, 'adminGetMessages'])->name('chat.messages');
     Route::get('conversations', [MessageController::class, 'adminGetConversations'])->name('chat.conversations');
-    
+
     // Products
     Route::get('products', [App\Http\Controllers\Admin\ProductController::class, 'index'])->name('products.index');
     Route::get('products/create', [App\Http\Controllers\Admin\ProductController::class, 'create'])->name('products.create');
@@ -66,34 +66,40 @@ Route::group(['middleware' => ['admin'], 'prefix' => 'admin', 'as' => 'admin.'],
     Route::get('products/{product}/edit', [App\Http\Controllers\Admin\ProductController::class, 'edit'])->name('products.edit');
     Route::put('products/{product}', [App\Http\Controllers\Admin\ProductController::class, 'update'])->name('products.update');
     Route::delete('products/{product}', [App\Http\Controllers\Admin\ProductController::class, 'destroy'])->name('products.destroy');
-    
+    Route::delete('products/images/{image}', [App\Http\Controllers\Admin\ProductController::class, 'deleteImage'])->name('products.images.destroy');
+
     // Categories
     Route::resource('categories', 'App\Http\Controllers\Admin\CategoryController');
-    
+
+    // Sliders
+    Route::resource('sliders', 'App\Http\Controllers\Admin\SliderController');
+    Route::post('sliders/{slider}/toggle', [App\Http\Controllers\Admin\SliderController::class, 'toggleStatus'])->name('sliders.toggle');
+    Route::post('sliders/reorder', [App\Http\Controllers\Admin\SliderController::class, 'reorder'])->name('sliders.reorder');
+
     // Discounts
     Route::get('discounts', [App\Http\Controllers\Admin\DiscountController::class, 'index'])->name('discounts.index');
     Route::post('discounts/update-bulk', [App\Http\Controllers\Admin\DiscountController::class, 'updateBulk'])->name('discounts.update-bulk');
-    
+
     // Customers
     Route::get('customers', 'App\Http\Controllers\Admin\AdminController@customers')->name('customers');
     Route::get('customers/{user}', 'App\Http\Controllers\Admin\AdminController@showCustomer')->name('customers.show');
     Route::post('customers/{user}/message', 'App\Http\Controllers\Admin\AdminController@sendMessage')->name('customers.message');
     Route::post('customers/{user}/send-message', 'App\Http\Controllers\Admin\AdminController@sendMessage')->name('customers.send-message');
-    
+
     // Reports
     Route::get('reports', 'App\Http\Controllers\Admin\AdminController@reports')->name('reports');
     Route::get('reports/sales', 'App\Http\Controllers\Admin\ReportController@salesReport')->name('reports.sales');
     Route::get('reports/item-wise-sales', 'App\Http\Controllers\Admin\ReportController@itemWiseSalesReport')->name('reports.item-wise-sales');
     Route::get('reports/district-wise-sales', 'App\Http\Controllers\Admin\ReportController@districtWiseSalesReport')->name('reports.district-wise-sales');
     Route::get('reports/monthly-item-demand', 'App\Http\Controllers\Admin\ReportController@monthlyItemDemandReport')->name('reports.monthly-item-demand');
-    
+
     // Activity Logs
     Route::get('activity-logs', [App\Http\Controllers\Admin\ActivityLogController::class, 'index'])->name('activity-logs.index');
     Route::get('activity-logs/{activityLog}', [App\Http\Controllers\Admin\ActivityLogController::class, 'show'])->name('activity-logs.show');
     Route::get('activity-logs/json', [App\Http\Controllers\Admin\ActivityLogController::class, 'json'])->name('activity-logs.json');
     Route::post('activity-logs/clear', [App\Http\Controllers\Admin\ActivityLogController::class, 'clear'])->name('activity-logs.clear');
     Route::get('activity-logs/export', [App\Http\Controllers\Admin\ActivityLogController::class, 'export'])->name('activity-logs.export');
-    
+
     // Orders
     Route::get('orders', 'App\Http\Controllers\Admin\OrderController@index')->name('orders.index');
     Route::get('orders/{order}', 'App\Http\Controllers\Admin\OrderController@show')->name('orders.show');
@@ -110,11 +116,11 @@ Route::group(['middleware' => ['admin'], 'prefix' => 'admin', 'as' => 'admin.'],
 Route::middleware('auth:web')->group(function () {
     Route::get('/dashboard', \App\Http\Controllers\DashboardController::class)
         ->name('dashboard');
-        
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    
+
     // User orders - using 'my.' prefix to avoid conflicts with admin routes
     Route::prefix('my')->name('my.')->group(function () {
         Route::get('orders', [App\Http\Controllers\OrderController::class, 'index'])->name('orders.index');

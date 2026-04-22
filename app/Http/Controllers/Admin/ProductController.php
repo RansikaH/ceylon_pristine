@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\ProductImage;
 use App\Models\Category;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
@@ -19,14 +20,14 @@ class ProductController extends Controller
     {
         $products = Product::with('category')->latest()->paginate(10);
         $categories = Category::all();
-        
+
         // Calculate product statistics
         $stats = [
             'in_stock' => Product::where('stock', '>', 10)->count(),
             'low_stock' => Product::where('stock', '>', 0)->where('stock', '<=', 10)->count(),
             'out_of_stock' => Product::where('stock', '<=', 0)->count(),
         ];
-        
+
         return view('admin.products.index', compact('products', 'categories', 'stats'));
     }
 
@@ -53,31 +54,83 @@ class ProductController extends Controller
             'sale_price' => 'nullable|numeric|min:0',
             'category_id' => 'required|exists:categories,id',
             'stock' => 'required|integer|min:0',
-            'image' => 'nullable|image|max:2048',
-            'images.*' => 'nullable|image|max:2048',
+            'main_image' => 'required|image|max:2048',
+            'additional_images.*' => 'nullable|image|max:2048',
+            'free_delivery_quantity' => 'nullable|integer|min:1',
+            'delivery_fee' => 'nullable|numeric|min:0',
             'is_featured' => 'boolean',
             'is_active' => 'boolean',
+        ], [
+            'main_image.required' => 'The main product image is required.',
+            'main_image.image' => 'The main image must be a valid image file (jpeg, jpg, png, gif, webp).',
+            'main_image.max' => 'The main image may not be greater than 2MB.',
+            'additional_images.*.image' => 'Additional images must be valid image files (jpeg, jpg, png, gif, webp).',
+            'additional_images.*.max' => 'Additional images may not be greater than 2MB each.',
+            'free_delivery_quantity.min' => 'Free delivery quantity must be at least 1.',
+            'delivery_fee.min' => 'Delivery fee cannot be negative.',
         ]);
 
-        if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('products', 'public');
+        $validated['slug'] = Str::slug($validated['name']);
+
+        // Debug: Check if file is uploaded
+        if (!$request->hasFile('main_image')) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['main_image' => 'No file was uploaded. Please select an image file.']);
         }
 
-        $validated['slug'] = Str::slug($validated['name']);
-        
         $product = Product::create($validated);
+
+        // Handle main image (store as primary image)
+        if ($request->hasFile('main_image')) {
+            $mainImage = $request->file('main_image');
+            $filename = time() . '_' . uniqid() . '.' . $mainImage->getClientOriginalExtension();
+
+            // Ensure directory exists
+            if (!is_dir(public_path('product-images'))) {
+                mkdir(public_path('product-images'), 0755, true);
+            }
+
+            // Move file to public directory
+            $mainImage->move(public_path('product-images'), $filename);
+
+            // Store in product_images table as primary
+            ProductImage::create([
+                'product_id' => $product->id,
+                'image_path' => $filename,
+                'sort_order' => 0,
+                'is_primary' => true
+            ]);
+
+            // Also update legacy image field for compatibility
+            $product->update(['image' => $filename]);
+        }
+
+        // Handle additional images
+        if ($request->hasFile('additional_images')) {
+            $sortOrder = 1;
+            foreach ($request->file('additional_images') as $index => $image) {
+                $filename = time() . '_' . uniqid() . '_' . $index . '.' . $image->getClientOriginalExtension();
+
+                // Ensure directory exists
+                if (!is_dir(public_path('product-images'))) {
+                    mkdir(public_path('product-images'), 0755, true);
+                }
+
+                // Move file to public directory
+                $image->move(public_path('product-images'), $filename);
+
+                ProductImage::create([
+                    'product_id' => $product->id,
+                    'image_path' => $filename,
+                    'sort_order' => $sortOrder++,
+                    'is_primary' => false
+                ]);
+            }
+        }
 
         // Log product creation
         ActivityLogger::productCreated($product);
-
-        // Handle multiple images
-        if ($request->hasFile('images')) {
-            $images = [];
-            foreach ($request->file('images') as $image) {
-                $images[] = ['image_path' => $image->store('products/gallery', 'public')];
-            }
-            $product->images()->createMany($images);
-        }
 
         return redirect()->route('admin.products.index')
             ->with('success', 'Product created successfully.');
@@ -114,21 +167,23 @@ class ProductController extends Controller
             'sale_price' => 'nullable|numeric|min:0',
             'category_id' => 'required|exists:categories,id',
             'stock' => 'required|integer|min:0',
-            'image' => 'nullable|image|max:2048',
+            'main_image' => 'nullable|image|max:2048',
+            'additional_images.*' => 'nullable|image|max:2048',
+            'free_delivery_quantity' => 'nullable|integer|min:1',
+            'delivery_fee' => 'nullable|numeric|min:0',
             'is_featured' => 'boolean',
             'is_active' => 'boolean',
+        ], [
+            'main_image.image' => 'The main image must be a valid image file (jpeg, jpg, png, gif, webp).',
+            'main_image.max' => 'The main image may not be greater than 2MB.',
+            'additional_images.*.image' => 'Additional images must be valid image files (jpeg, jpg, png, gif, webp).',
+            'additional_images.*.max' => 'Additional images may not be greater than 2MB each.',
+            'free_delivery_quantity.min' => 'Free delivery quantity must be at least 1.',
+            'delivery_fee.min' => 'Delivery fee cannot be negative.',
         ]);
 
-        if ($request->hasFile('image')) {
-            // Delete old image if exists
-            if ($product->image) {
-                Storage::disk('public')->delete($product->image);
-            }
-            $validated['image'] = $request->file('image')->store('products', 'public');
-        }
-
         $validated['slug'] = Str::slug($validated['name']);
-        
+
         // Track changes for logging
         $changes = [];
         foreach ($validated as $key => $value) {
@@ -139,16 +194,90 @@ class ProductController extends Controller
                 ];
             }
         }
-        
+
         $product->update($validated);
 
-        // Log product update if there were changes
-        if (!empty($changes)) {
-            ActivityLogger::productUpdated($product, $changes);
+        // Handle main image update
+        if ($request->hasFile('main_image')) {
+            // Delete old primary image if exists
+            $oldPrimaryImage = $product->primaryImage;
+            if ($oldPrimaryImage) {
+                $oldImagePath = public_path('product-images/' . $oldPrimaryImage->image_path);
+                if (file_exists($oldImagePath)) {
+                    unlink($oldImagePath);
+                }
+                $oldPrimaryImage->delete();
+            }
+
+            // Upload new main image
+            $mainImage = $request->file('main_image');
+            $filename = time() . '_' . uniqid() . '.' . $mainImage->getClientOriginalExtension();
+
+            // Ensure directory exists
+            if (!is_dir(public_path('product-images'))) {
+                mkdir(public_path('product-images'), 0755, true);
+            }
+
+            // Move file to public directory
+            $mainImage->move(public_path('product-images'), $filename);
+
+            // Store as primary image
+            ProductImage::create([
+                'product_id' => $product->id,
+                'image_path' => $filename,
+                'sort_order' => 0,
+                'is_primary' => true
+            ]);
+
+            // Also update legacy image field for compatibility
+            $product->update(['image' => $filename]);
         }
+
+        // Handle additional images
+        if ($request->hasFile('additional_images')) {
+            $sortOrder = $product->all_images->count() + 1;
+            foreach ($request->file('additional_images') as $index => $image) {
+                $filename = time() . '_' . uniqid() . '_' . $index . '.' . $image->getClientOriginalExtension();
+
+                // Ensure directory exists
+                if (!is_dir(public_path('product-images'))) {
+                    mkdir(public_path('product-images'), 0755, true);
+                }
+
+                // Move file to public directory
+                $image->move(public_path('product-images'), $filename);
+
+                ProductImage::create([
+                    'product_id' => $product->id,
+                    'image_path' => $filename,
+                    'sort_order' => $sortOrder++,
+                    'is_primary' => false
+                ]);
+            }
+        }
+
+        // Log product update
+        ActivityLogger::productUpdated($product, $changes);
 
         return redirect()->route('admin.products.index')
             ->with('success', 'Product updated successfully.');
+    }
+
+    /**
+     * Delete a specific product image.
+     */
+    public function deleteImage(ProductImage $image)
+    {
+        // Delete the image file
+        $imagePath = public_path('product-images/' . $image->image_path);
+        if (file_exists($imagePath)) {
+            unlink($imagePath);
+        }
+
+        // Delete the database record
+        $image->delete();
+
+        return response()->json(['success' => true, 'message' => 'Image deleted successfully']);
     }
 
     /**
@@ -156,17 +285,15 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
-        // Delete associated images
-        if ($product->image) {
-            Storage::disk('public')->delete($product->image);
-        }
-        
-        // Delete gallery images
+        // Delete product images
         foreach ($product->images as $image) {
-            Storage::disk('public')->delete($image->image_path);
+            $imagePath = public_path('product-images/' . $image->image_path);
+            if (file_exists($imagePath)) {
+                unlink($imagePath);
+            }
+            $image->delete();
         }
-        $product->images()->delete();
-        
+
         $product->delete();
 
         // Log product deletion
